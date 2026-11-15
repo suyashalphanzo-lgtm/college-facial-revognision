@@ -1,0 +1,21 @@
+# Photos and face data of real people stay on this computer.
+data/people/
+data/face_database*.json
+data/attendance.csv
+data/results/
+# The camera chosen in the window on this computer.
+data/camera.txt
+
+# Our own trained model is shared. OpenCV's YuNet face detector is downloaded automatically on first
+# run (and OpenCV's SFace only by "python -m training.evaluate --compare-opencv"), so it isn't.
+models/*
+!models/our_sface.onnx
+
+# Training our own SFace: downloaded face datasets (research use only) stay here. Of the training
+# runs, only the epoch-by-epoch logs are shared (the saved networks are 4-19 MB each).
+datasets/
+training/runs/*/*
+!training/runs/*/log.csv
+
+__pycache__/
+.pytest_cache/

@@ -1,0 +1,151 @@
+<!doctype html>
+{#
+  The web version's page. Flask sends it as it is (only the two url_for links below are filled in by
+  Jinja, Flask's template language). The JavaScript in web/static/app.js then fills in the lists and
+  keeps everything up to date by asking the server; web_app.py lists the addresses it asks.
+
+  On a computer screen everything fits in the window, so nothing needs scrolling: the camera pane on
+  the left, the tools in the middle, today's attendance and the registered people on the right.
+  web/static/style.css says how.
+#}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>College Face Recognition</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {# defer: run the script once the whole page has been read, so it can find every element #}
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <header class="top-bar">
+    <h1>College Face Recognition</h1>
+    <p id="today" class="today"></p>
+  </header>
+
+  <main class="layout">
+    <section id="camera" class="pane camera-pane" aria-label="Camera">
+      <div class="camera-bar">
+        <div class="camera-choice">
+          <select id="camera-list" aria-label="Choose a camera"></select>
+          <button id="refresh-cameras" title="List the cameras again, after plugging one in">Refresh</button>
+        </div>
+        <div class="buttons">
+          <button id="start-live" class="primary">Start live attendance</button>
+          <button id="stop" class="stop" title="Turn the camera off">Stop</button>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div id="video-box" class="video-box">
+          <img id="video" alt="The camera's picture, with every face boxed and named">
+          <p id="camera-off-text" class="camera-off">Camera is off</p>
+          <span id="badge" class="badge" hidden></span>
+          <div id="countdown" class="countdown" hidden></div>
+          <div id="registration-bar" class="registration-bar" hidden>
+            <ol id="progress" class="progress" aria-label="Registration photos"></ol>
+            <p id="pose" class="pose"></p>
+          </div>
+        </div>
+      </div>
+
+      <p id="message" class="message"></p>
+      <p id="error" class="error" hidden></p>
+    </section>
+
+    <section class="pane tools-pane" aria-label="Tools">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="add">Add person</button>
+        <button role="tab" data-tab="photo">Recognize</button>
+        <button role="tab" data-tab="history">History</button>
+      </nav>
+
+      <div class="tab-panel" data-panel="add" role="tabpanel">
+        <div>
+          <label class="field-label" for="person-name">Name</label>
+          <input id="person-name" type="text" maxlength="60" autocomplete="off" placeholder="For example: Aaditya Sharma">
+        </div>
+        <button id="register-camera" class="primary wide">Take 5 photos with the camera</button>
+        <p class="note">The camera picture shows each pose to make, and counts down before each photo.</p>
+
+        <h3 class="subheading">Or from photos</h3>
+        <div class="file-row">
+          <label class="button file-button">
+            <input id="person-photos" class="visually-hidden" type="file" accept=".jpg,.jpeg,.png,.bmp,.webp" multiple>
+            Choose photos...
+          </label>
+          <span id="person-photos-text" class="note">3 to 5 photos, each showing only them</span>
+        </div>
+        <button id="register-upload" class="wide">Upload and register</button>
+
+        <p id="add-message" class="message"></p>
+        <p class="note small">
+          Photos copied into data/people by hand (one folder per person) are registered with
+          <button id="rebuild" class="link-button">Register everyone from the photo folders</button>.
+        </p>
+      </div>
+
+      <div class="tab-panel" data-panel="photo" role="tabpanel" hidden>
+        <form id="photo-form" class="file-row">
+          <label class="button file-button">
+            <input id="photo-file" class="visually-hidden" type="file" name="photo" accept=".jpg,.jpeg,.png,.bmp,.webp">
+            Choose a photo...
+          </label>
+        </form>
+        <p class="note">Every face in it gets a box, with a name if it is a registered person.</p>
+        <p id="photo-message" class="message"></p>
+        <div id="photo-result" class="photo-result" hidden>
+          <img id="photo-image" alt="The photo with every face found boxed and named" title="Click to see it bigger">
+          <ul id="photo-faces" class="list"></ul>
+          <p id="photo-caption" class="note small"></p>
+        </div>
+      </div>
+
+      <div class="tab-panel" data-panel="history" role="tabpanel" hidden>
+        <div class="history-head">
+          <input id="history-date" type="date" aria-label="Date">
+          <a id="history-csv" href="/attendance.csv">Download this day</a>
+        </div>
+        <p id="history-message" class="message" hidden></p>
+        <div class="table-box">
+          <table class="table">
+            <thead><tr><th>#</th><th>Name</th><th>Time</th></tr></thead>
+            <tbody id="history-rows"></tbody>
+          </table>
+          <p id="history-empty" class="empty">No one was marked present on this day.</p>
+        </div>
+        <div id="history-days" hidden>
+          <div class="history-head">
+            <h3 class="subheading">Days with attendance</h3>
+            <a href="/attendance.csv">Download all days</a>
+          </div>
+          <div id="history-dates" class="days"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane present-pane" aria-label="Present today">
+      <div class="pane-head">
+        <h2>Present today<span id="present-count" class="count">0</span></h2>
+        <a id="today-csv" href="/attendance.csv" title="Download today's attendance as a CSV file">Download CSV</a>
+      </div>
+      <ul id="present-list" class="list"></ul>
+      <p id="present-empty" class="empty">No one has been marked present yet.</p>
+    </section>
+
+    <section class="pane people-pane" aria-label="Registered people">
+      <div class="pane-head">
+        <h2>Registered people<span id="people-count" class="count">0</span></h2>
+      </div>
+      <ul id="people-list" class="list"></ul>
+      <p id="people-empty" class="empty">No one yet. Add a person with "Add person".</p>
+      <p id="people-message" class="message small" hidden></p>
+    </section>
+  </main>
+
+  {# The recognized photo, as big as the window allows. A click closes it, and so does Esc. #}
+  <dialog id="viewer" class="viewer">
+    <img id="viewer-image" alt="The recognized photo, bigger">
+  </dialog>
+</body>
+</html>

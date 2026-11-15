@@ -1,0 +1,689 @@
+/* The look of the web version: flat and plain. Thin lines divide the window into panes, one neutral
+   set of colours does almost everything, and colour only appears where it means something: green for
+   a known face or someone present, red for an unknown face, for Live and for Stop, and blue for links.
+
+   On a computer screen the page is exactly as tall as the window, so every feature is in sight and
+   nothing needs scrolling: the camera on the left, the tools (adding a person, recognizing a photo,
+   attendance history) in the middle, and today's attendance and the registered people on the right.
+   A list that grows longer than its pane scrolls inside the pane. In a small window (narrower than
+   1000 pixels, or shorter than 520), the panes are stacked instead and the page scrolls.
+   The rules for computer screens are at the end of this file. */
+
+/* Colours and sizes in one place ("custom properties"): change a value here and the whole page follows. */
+:root {
+  color-scheme: light dark; /* the browser's own parts (scroll bars, menus, the date picker) follow the mode */
+  --page: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --line: #e3e3e1; /* the thin lines between panes and rows */
+  --field-border: #c8c8c5; /* around buttons and fields */
+  --hover: #f2f2f0;
+  --primary: #1d1d1f; /* the main buttons: near-black */
+  --primary-text: #ffffff;
+  --primary-hover: #3a3a3c;
+  --link: #1a5fb4;
+  --known: #1e7a3c;
+  --unknown: #c42b1c;
+  --warn: #946200;
+  --live: #d92d20;
+  --stage: #f0f0ee; /* the camera's area while there is no picture */
+  --bar-height: 44px; /* the top bar, with its line */
+  --control: 34px; /* the height of buttons, fields and lists of choices */
+  --pane-padding: 16px;
+  --pane-gap: 10px; /* between the parts of a pane */
+}
+
+/* Dark mode: the same names get other values when Windows is set to dark. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #1a1a1a;
+    --text: #ececec;
+    --muted: #a0a0a0;
+    --line: #2f2f2f;
+    --field-border: #474747;
+    --hover: #262626;
+    --primary: #ececec; /* light buttons on the dark page */
+    --primary-text: #161616;
+    --primary-hover: #ffffff;
+    --link: #79aef2;
+    --known: #4cc26f;
+    --unknown: #ff6b5e;
+    --warn: #e0a43a;
+    --live: #e5484d;
+    --stage: #0c0c0c;
+  }
+}
+
+* {
+  box-sizing: border-box; /* widths include padding and border, which makes layouts predictable */
+}
+
+[hidden] {
+  display: none !important; /* hidden always wins, even over a display set below */
+}
+
+body {
+  margin: 0;
+  font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  background: var(--page);
+  color: var(--text);
+}
+
+/* ---------- the top bar and the panes ---------- */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: var(--bar-height);
+  padding: 0 var(--pane-padding);
+  border-bottom: 1px solid var(--line);
+}
+.top-bar h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.top-bar .today {
+  margin: 0;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Small windows: the panes one below the other. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pane-gap);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--pane-padding);
+  border-bottom: 1px solid var(--line);
+}
+.pane-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pane h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.count {
+  margin-left: 6px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.subheading {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------- buttons, fields and links ---------- */
+
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control);
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  background: var(--page);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+button:hover:not(:disabled),
+.button:hover {
+  background: var(--hover);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+}
+.primary:hover:not(:disabled) {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+}
+.stop {
+  border-color: var(--live);
+  color: var(--live);
+}
+.stop:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--live) 10%, transparent);
+}
+.wide {
+  width: 100%;
+}
+
+a,
+.link-button {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover,
+.link-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+/* A button that looks like a link, inside a sentence. */
+.link-button {
+  display: inline;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  font-weight: inherit;
+  white-space: normal;
+  text-align: left;
+}
+.link-button:hover:not(:disabled) {
+  background: none;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+  min-width: 0;
+  height: var(--control);
+  padding: 0 8px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  background: var(--page);
+  color: var(--text);
+  font: inherit;
+}
+input[type="text"] {
+  width: 100%;
+}
+:focus-visible,
+.file-button:has(:focus-visible) {
+  outline: 2px solid var(--link);
+  outline-offset: 1px;
+}
+.field-label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* A file chooser that looks like the other buttons: the real one is hidden inside the label, and
+   clicking the label opens it. */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.file-button {
+  position: relative;
+  flex-shrink: 0;
+}
+/* Hidden from sight, but still there for the keyboard and screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- messages and notes ---------- */
+
+.message {
+  min-height: 1.45em;
+  margin: 0;
+}
+.problem {
+  color: var(--unknown);
+}
+.error {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--unknown);
+  border-radius: 6px;
+  color: var(--unknown);
+}
+.note {
+  margin: 0;
+  color: var(--muted);
+}
+.small {
+  font-size: 12.5px;
+}
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ---------- the camera ---------- */
+
+.camera-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.camera-choice {
+  display: flex;
+  flex: 1 1 200px;
+  gap: 8px;
+  min-width: 0;
+}
+.camera-choice select {
+  flex: 0 1 260px;
+}
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* The stage is the camera's area; the picture sits in the middle of it and keeps the webcam's 4:3
+   shape. In a small window it is as wide as the pane, but never taller than the window. */
+.stage {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--stage);
+}
+.video-box {
+  position: relative;
+  width: min(100%, (100vh - 140px) * 4 / 3);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.video-box img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.video-box.has-picture {
+  background: #000000; /* behind the picture, if it doesn't fill the box */
+}
+.video-box.has-picture img {
+  display: block;
+}
+.camera-off {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--muted);
+}
+.video-box.has-picture .camera-off {
+  display: none;
+}
+/* Live, Registering or Opening, in the top left corner of the picture. */
+.badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 65%);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.badge.live {
+  background: var(--live);
+}
+.countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 80%); /* readable on a light background too */
+}
+.countdown.small {
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 65%);
+  font-size: 18px;
+  white-space: nowrap;
+  text-shadow: none;
+}
+/* While registering: one dot per photo, and the pose to make, along the bottom of the picture. */
+.registration-bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgb(0 0 0 / 62%);
+  color: white;
+}
+.pose {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+.progress {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.progress li {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 30%);
+}
+.progress li.done {
+  background: #4cc26f;
+}
+.progress li.current {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px white;
+}
+
+/* ---------- the tools: tabs ---------- */
+
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  height: 34px;
+  margin-bottom: -1px; /* the open tab's line covers the line under the tabs */
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+}
+.tabs button:hover:not(:disabled) {
+  background: none;
+  color: var(--text);
+}
+.tabs button[aria-selected="true"] {
+  border-bottom-color: var(--text);
+  color: var(--text);
+}
+.tab-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--pane-gap);
+  min-height: 0;
+  margin: 0 -2px;
+  padding: 2px; /* room for the focus outline */
+  overflow-y: auto; /* only if the window is too short for what the tab shows */
+}
+
+/* ---------- lists: one row per person or face ---------- */
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /* a long list scrolls inside its pane */
+  list-style: none;
+}
+.list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.list li:last-child {
+  border-bottom: none;
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.name.known,
+.name.unknown {
+  font-weight: 600;
+}
+.name.known {
+  color: var(--known);
+}
+.name.unknown {
+  color: var(--unknown);
+}
+.detail {
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums; /* digits of equal width, so times line up */
+}
+.detail.warn {
+  color: var(--warn);
+}
+/* The × that deletes a person. */
+.remove {
+  height: 26px;
+  padding: 0 6px;
+  border-color: transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+}
+.remove:hover:not(:disabled) {
+  background: none;
+  color: var(--unknown);
+}
+
+/* ---------- recognizing a photo ---------- */
+
+.photo-result {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 140px;
+}
+/* The photo keeps its own size when it fits (a small photo isn't stretched and blurred), and shrinks
+   when it doesn't: never wider than the tab, nor taller than the room that is left in it. */
+.photo-result img {
+  display: block;
+  align-self: flex-start; /* not stretched to the tab's width */
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain; /* when only its height shrinks, the picture shrinks inside it without being squashed */
+  border-radius: 4px;
+  cursor: zoom-in;
+}
+.photo-result .list {
+  flex: none; /* as tall as its faces; the photo gets the rest */
+  overflow: visible;
+}
+
+/* The recognized photo, as big as the window allows. */
+.viewer {
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: none;
+  background: none;
+  overflow: visible;
+}
+.viewer::backdrop {
+  background: rgb(0 0 0 / 80%);
+}
+.viewer img {
+  display: block;
+  max-width: 95vw;
+  max-height: 92vh;
+  cursor: zoom-out;
+}
+
+/* ---------- attendance history ---------- */
+
+.history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+.history-head .subheading {
+  margin: 0;
+}
+.table-box {
+  flex: 1;
+  min-height: 90px;
+  overflow-y: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.table th,
+.table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.table th {
+  position: sticky; /* the column names stay at the top while the rows scroll */
+  top: 0;
+  background: var(--page);
+  color: var(--muted);
+  font-weight: 600;
+}
+.table td:first-child {
+  width: 2.5em;
+  color: var(--muted);
+}
+.table-box .empty {
+  padding: 8px 0;
+}
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.days button {
+  height: 28px;
+  padding: 0 9px;
+  font-weight: 400;
+}
+.days button.selected,
+.days button.selected:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.list,
+.tab-panel,
+.table-box {
+  scrollbar-color: var(--field-border) transparent;
+  scrollbar-width: thin;
+}
+
+/* ---------- computer screens: everything in the window, nothing to scroll ---------- */
+
+@media (min-width: 1000px) and (min-height: 520px) {
+  /* The page is exactly as tall as the window (100vh): the top bar, then the grid gets the rest. */
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .layout {
+    flex: 1;
+    min-height: 0; /* the grid may be shorter than its content: long lists then scroll inside their panes */
+    /* The camera's column is just wide enough for the biggest 4:3 picture that fits in the window's
+       height. That height is the window's, minus everything above and below the picture: the top bar,
+       the camera pane's padding, its buttons, the gaps between its parts, and its message line. The
+       other two columns share what is left of the width. */
+    --picture-height: calc(100vh - var(--bar-height) - 2 * var(--pane-padding) - var(--control)
+      - 2 * var(--pane-gap) - 1.45em);
+    grid-template-columns:
+      minmax(0, calc(var(--picture-height) * 4 / 3 + 2 * var(--pane-padding) + 1px))
+      minmax(300px, 1.2fr)
+      minmax(250px, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "camera tools present"
+      "camera tools people";
+  }
+  /* Lines between the panes, instead of below each one. The 1px in the camera's column above is
+     its line. */
+  .camera-pane {
+    grid-area: camera;
+    border-right: 1px solid var(--line);
+    border-bottom: none;
+  }
+  .tools-pane {
+    grid-area: tools;
+    border-right: 1px solid var(--line);
+    border-bottom: none;
+  }
+  .present-pane {
+    grid-area: present;
+  }
+  .people-pane {
+    grid-area: people;
+    border-bottom: none;
+  }
+
+  /* The stage takes all the height the camera pane has left, and the picture is as big as fits in it.
+     100cqw and 100cqh are the stage's own width and height ("container query units"), which
+     container-type: size makes available to what is inside it. */
+  .stage {
+    flex: 1;
+    min-height: 0;
+    container-type: size;
+  }
+  .video-box {
+    width: min(100cqw, 100cqh * 4 / 3);
+  }
+
+  /* The recognized photo may shrink to the room that is left in its tab. */
+  .photo-result img {
+    min-height: 0;
+    max-height: none;
+  }
+}

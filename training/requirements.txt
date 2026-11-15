@@ -1,0 +1,5 @@
+# Only needed to train our own SFace (the app itself only needs ../requirements.txt).
+# On this computer: PyTorch 2.13 with CUDA 13.0 and onnx 1.23.
+-r ../requirements.txt
+torch
+onnx
